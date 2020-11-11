@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 
+int get_symbol_number(char c) { 
+    return c - 'a'; 
+}
+
 struct Node {
   std::vector<int> next;
   std::vector<int> go;
@@ -15,123 +19,159 @@ struct Node {
   Node(int flag) : next(26, -1), go(26, -1), link(-1), up(-1) {}
 };
 
-class Bohr {
+class Trie {
  public:
   void add_string(const std::string& s, int l, int r, int flag);
   int go(int vertex, char c);
-  int GetSufLink(int vertex);
-  int GetUp(int vertex);
+  int get_suf_link(int vertex);
+  int get_up(int vertex);
   const std::vector<int>& get_flags(int vertex);
-  void AddFlagToVertex(int vertex, int flag);
-  Bohr() { bohr.push_back(Node(-1)); }
-
+  void add_flag_to_vertex(int vertex, int flag);
+  Trie() { trie.push_back(Node(-1)); }
+  void add_node(int vertex, char c);
  private:
-  std::vector<Node> bohr;
+  std::vector<Node> trie;
 };
 
-void Bohr::add_string(const std::string& s, int l, int r, int flag) {
-  int vertex = 0;
-  int size = bohr.size();
-  for (int i = l; i < r; ++i) {
-    int num = s[i] - 'a';
-    if (bohr[vertex].next[num] == -1) {
-      bohr[vertex].next[num] = size;
-      bohr.push_back(Node(-1));
-      bohr[size].prev = vertex;
-      bohr[size++].edge = s[i];
-    }
-    vertex = bohr[vertex].next[num];
+void Trie::add_node(int vertex, char c) {
+  int size = trie.size();
+  int symbol_number = get_symbol_number(c);
+  if (trie[vertex].next[symbol_number] == -1) {
+    trie[vertex].next[symbol_number] = size;
+    trie.push_back(Node(-1));
+    trie[size].prev = vertex;
+    trie[size++].edge = c;
   }
-
-  bohr[vertex].flags.push_back(flag);
 }
 
-int Bohr::GetSufLink(int vertex) {
-  if (bohr[vertex].link == -1)
-    if (vertex != 0 && bohr[vertex].prev != 0) {
-      bohr[vertex].link = go(GetSufLink(bohr[vertex].prev), bohr[vertex].edge);
+void Trie::add_string(const std::string& s, int l, int r, int flag) {
+  int vertex = 0;
+  int size = trie.size();
+  for (int i = l; i < r; ++i) {
+    add_node(vertex, s[i]);
+    vertex = trie[vertex].next[get_symbol_number(s[i])];
+  }
+  trie[vertex].flags.push_back(flag);
+}
+
+int Trie::get_suf_link(int vertex) {
+  if (trie[vertex].link == -1)
+    if (vertex != 0 && trie[vertex].prev != 0) {
+      trie[vertex].link = go(get_suf_link(trie[vertex].prev), trie[vertex].edge);
     } else {
-      bohr[vertex].link = 0;
+      trie[vertex].link = 0;
     }
-  return bohr[vertex].link;
+  return trie[vertex].link;
 }
 
-int Bohr::go(int vertex, char c) {
-  int num = c - 'a';
-  if (bohr[vertex].go[num] == -1)
-    if (bohr[vertex].next[num] == -1) {
-      bohr[vertex].go[num] = vertex != 0 ? go(GetSufLink(vertex), c) : 0;
+int Trie::go(int vertex, char c) {
+  int symbol_number = get_symbol_number(c);
+  if (trie[vertex].go[symbol_number] == -1)
+    if (trie[vertex].next[symbol_number] == -1) {
+      trie[vertex].go[symbol_number] = vertex != 0 ? go(get_suf_link(vertex), c) : 0;
     } else {
-      bohr[vertex].go[num] = bohr[vertex].next[num];
+      trie[vertex].go[symbol_number] = trie[vertex].next[symbol_number];
     }
-  return bohr[vertex].go[num];
+  return trie[vertex].go[symbol_number];
 }
 
-int Bohr::GetUp(int vertex) {
-  if (bohr[vertex].up == -1)
-    if (bohr[GetSufLink(vertex)].flags.size() > 0) {
-      bohr[vertex].up = GetSufLink(vertex);
+int Trie::get_up(int vertex) {
+  if (trie[vertex].up == -1)
+    if (trie[get_suf_link(vertex)].flags.size() > 0) {
+      trie[vertex].up = get_suf_link(vertex);
     } else {
-      if (GetSufLink(vertex) == 0) {
-        bohr[vertex].up = 0;
+      if (get_suf_link(vertex) == 0) {
+        trie[vertex].up = 0;
       } else {
-        bohr[vertex].up = GetUp(GetSufLink(vertex));
+        trie[vertex].up = get_up(get_suf_link(vertex));
       }
     }
-  return bohr[vertex].up;
+  return trie[vertex].up;
 }
 
-const std::vector<int>& Bohr::get_flags(int vertex) {
-  return bohr[vertex].flags;
+const std::vector<int>& Trie::get_flags(int vertex) {
+  return trie[vertex].flags;
 }
 
-void Bohr::AddFlagToVertex(int vertex, int flag) {
-  bohr[vertex].flags.push_back(flag);
+void Trie::add_flag_to_vertex(int vertex, int flag) {
+  trie[vertex].flags.push_back(flag);
 }
 
-void decision(std::string& text, std::string& pattern,
-              std::vector<int>& answer) {
-  Bohr B;
-  std::vector<int> PatNum(text.size());
+std::vector<std::string> Split(const std::string& string, char delimiter) {
+  std::vector<std::string> substrings;
   int l = 0;
   int r = 0;
-  int CountFragments = 0;
-  while (r != pattern.size()) {
-    if (pattern[r] == '?') {
+  while (r != string.size()) {
+    if (string[r] == delimiter) {
       if (l < r) {
-        CountFragments++;
-        B.add_string(pattern, l, r, r - 1);
+        substrings.push_back(string.substr(l, r - l));
       }
       l = r + 1;
     }
     ++r;
   }
   if (l < r) {
-    CountFragments++;
-    B.add_string(pattern, l, r, r - 1);
+    substrings.push_back(string.substr(l, r - l));
+  }
+  return substrings;
+}
+
+void build_tree_with_substrs(Trie& bohr, int& count_fragments, 
+    const std::string& pattern) {
+  std::vector<std::string> substrings = Split(pattern, '?');
+  int begin_of_substring = 0;
+  for (int i = 0; i < substrings.size(); ++i) {
+    int left = begin_of_substring;
+    int right = begin_of_substring + substrings[i].size();
+    bohr.add_string(substrings[i], left, right, right - 1);
+  }
+  count_fragments = substrings.size();
+}
+
+
+std::vector<int> occurrences_pattern_in_text(std::string& text, std::string& pattern) {
+  Trie bohr;
+  int count_fragments = 0;
+  std::vector<int> pattern_number(text.size());
+  int l = 0;
+  int r = 0;
+  while (r != pattern.size()) {
+    if (pattern[r] == '?') {
+      if (l < r) {
+        ++count_fragments;
+        bohr.add_string(pattern, l, r, r - 1);
+      }
+      l = r + 1;
+    }
+    ++r;
+  }
+  if (l < r) {
+    ++count_fragments;
+    bohr.add_string(pattern, l, r, r - 1);
   }
   int vertex = 0;
   int vertex2 = 0;
   for (int i = 0; i < text.size(); ++i) {
     char c = text[i];
-    vertex = B.go(vertex, c);
+    vertex = bohr.go(vertex, c);
     vertex2 = vertex;
     while (vertex2 != 0) {
-      const std::vector<int>& flags = B.get_flags(vertex2);
+      const std::vector<int>& flags = bohr.get_flags(vertex2);
       for (int flag : flags) {
         if (i - flag >= 0) {
-          PatNum[i - flag]++;
+          ++pattern_number[i - flag];
         }
       }
-      vertex2 = B.GetUp(vertex2);
+      vertex2 = bohr.get_up(vertex2);
     }
   }
+  std::vector<int> answer;
   for (int i = 0; i < int(text.size()) - int(pattern.size()) + 1; ++i) {
-    if (PatNum[i] == CountFragments) {
-    
+    if (pattern_number[i] == count_fragments) {
       answer.push_back(i);
     }
   }
+  return answer;
 }
 
 int main() {
@@ -140,7 +180,7 @@ int main() {
   std::string pattern;
   std::string text;
   in >> pattern >> text;
-  decision(text, pattern, answer);
+  answer = occurrences_pattern_in_text(text, pattern);
   for (int i : answer) {
     std::cout << i << ' ';
   }
