@@ -203,7 +203,9 @@ int NextFace(std::vector<Point>& points, Segment edge, Point p_for_edge)
 	for (int i = 0; i < points.size(); ++i)
 	{
 		if (points[i] == edge.first_end_ || points[i] == edge.second_end_)
+		{
 			continue;
+		}
 		long double cosinus = AnlgePlanes(p_for_edge, edge, points[i]);
 		if (cosinus < min_cosinus)
 		{
@@ -211,16 +213,15 @@ int NextFace(std::vector<Point>& points, Segment edge, Point p_for_edge)
 			min_cosinus = cosinus;
 		}
 	}
-	//std::cout << '{' << min_cosinus << '\n';
 	return index;
 }
 
-struct FaceIndexes
+struct Indices
 {
 	int a;
 	int b;
 	int c;
-	FaceIndexes(int a, int b, int c) : a(a), b(b), c(c) {}
+	Indices(int a, int b, int c) : a(a), b(b), c(c) {}
 };
 
 void FindFirstThreePoints(int& A_index, int& B_index, int& C_index, int& D_index,
@@ -269,7 +270,7 @@ void FindFirstThreePoints(int& A_index, int& B_index, int& C_index, int& D_index
 	D = points[D_index];
 }
 
-void FindPointsOnHorizontPlane(int& A_index, int& B_index, int& C_index,
+void Horizontal(int& A_index, int& B_index, int& C_index,
 	std::vector<Point>& points)
 {
 	long double x_min = INF, y_min = INF, z_min = INF;
@@ -297,14 +298,14 @@ void FindPointsOnHorizontPlane(int& A_index, int& B_index, int& C_index,
 
 }
 
-void FirstPlane(std::vector<Point>& points, std::vector<FaceIndexes>& faces, 
+void FirstPlane(std::vector<Point>& points, std::vector<Indices>& faces, 
 	std::map<std::pair<int, int>, int>& map_for_edges)
 {
 	int A_index = -1;
 	int B_index = -1;
 	int C_index = -1;
 	int D_index = -1;
-	FindPointsOnHorizontPlane(A_index, B_index, C_index, points);
+	Horizontal(A_index, B_index, C_index, points);
 	Point A, B, C, D;
 	FindFirstThreePoints(A_index, B_index, C_index, D_index, A, B, C, D, points);
 	
@@ -322,13 +323,13 @@ void FirstPlane(std::vector<Point>& points, std::vector<FaceIndexes>& faces,
 	map_for_edges[std::make_pair(A_index, B_index)] = C_index;
 	map_for_edges[std::make_pair(B_index, C_index)] = A_index;
 	map_for_edges[std::make_pair(C_index, A_index)] = B_index;
-	faces.push_back(FaceIndexes(A_index, B_index, C_index));
+	faces.push_back(Indices(A_index, B_index, C_index));
 }
 
 
-std::vector<FaceIndexes> Hull(std::vector<Point>& points)
+std::vector<Indices> Hull(std::vector<Point>& points)
 {
-	std::vector<FaceIndexes> faces;
+	std::vector<Indices> faces;
 	std::map<std::pair<int, int>, int> map_for_edges;
 	FirstPlane(points, faces, map_for_edges);
 	while (!map_for_edges.empty())
@@ -355,16 +356,16 @@ std::vector<FaceIndexes> Hull(std::vector<Point>& points)
 			map_for_edges.erase(std::make_pair(index, p.second));
 		}
 		if (p.first < p.second && p.first < index)
-			faces.push_back(FaceIndexes(p.first, index, p.second));
+			faces.push_back(Indices(p.first, index, p.second));
 		if (p.second < p.first && p.second < index)
-			faces.push_back(FaceIndexes(p.second, p.first, index));
+			faces.push_back(Indices(p.second, p.first, index));
 		if (index < p.first && index < p.second)
-			faces.push_back(FaceIndexes(index, p.second, p.first));
+			faces.push_back(Indices(index, p.second, p.first));
 	}
 	return faces;	
 }
 
-bool CmpForEdges(FaceIndexes first, FaceIndexes second)
+bool CmpForEdges(Indices first, Indices second)
 {
 	if ((first.a < second.a) || (first.a == second.a && first.b < second.b)
 		|| (first.a == second.a && first.b == second.b && first.c < second.c))
@@ -390,7 +391,7 @@ int main()
 			fin >> p;
 			points.push_back(p);
 		}
-		std::vector<FaceIndexes> cov = Hull(points);
+		std::vector<Indices> cov = Hull(points);
 		std::sort(cov.begin(), cov.end(), CmpForEdges);
 		std::cout << cov.size() << '\n';
 		for (int i = 0; i < cov.size(); ++i)
