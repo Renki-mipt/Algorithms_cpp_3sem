@@ -1,9 +1,9 @@
-#include <iostream>
-#include <vector>
 #include <algorithm>
-#include <stack>
-#include <fstream>
 #include <cmath>
+#include <iostream>
+#include <fstream>
+#include <stack>
+#include <vector>
 
 const long double INF = 1e9 + 3;
 
@@ -16,12 +16,12 @@ struct Point
 	Point& operator*=(const long double& d);
 };
 
-bool operator==(Point& A, Point& B)
+bool operator==(const Point& A,const Point& B)
 {
 	return A.x == B.x && A.y == B.y;
 }
 
-bool operator!=(Point& A, Point& B)
+bool operator!=(const Point& A, const Point& B)
 {
 	return !(A == B);
 }
@@ -59,17 +59,17 @@ struct Vector
 		this->x = B.x - A.x;
 		this->y = B.y - A.y;
 	}
-	long double len()
+	inline long double len()
 	{
 		return sqrt(x * x + y * y);
 	}
 };
 
-long double dot_product(Vector A, Vector B) {
+long double dot_product(const Vector& A, const Vector& B) {
 	return A.x * B.x + A.y * B.y;
 }
 
-long double cross_product(Vector A, Vector B) {
+long double cross_product(const Vector& A, const Vector& B) {
 	return A.x * B.y - A.y * B.x;
 }
 
@@ -83,7 +83,7 @@ Vector operator+(const Vector& A, const Vector& B)
 	return Vector(A.x + B.x, A.y + B.y);
 }
 
-int MostDown(std::vector<Point>& polygon)
+int MostDown(const std::vector<Point>& polygon)
 {
 	int number = 0;
 	long double min = INF;
@@ -96,8 +96,8 @@ int MostDown(std::vector<Point>& polygon)
 	return number;
 }
 
-std::vector<Vector> VectorSort(int i, int j, std::vector<Point>& polygon1, 
-	std::vector<Point>& polygon2)
+std::vector<Vector> VectorSort(int i, int j, const std::vector<Point>& polygon1, 
+	const std::vector<Point>& polygon2)
 {
 	std::vector<Vector> vec_sort;
 	Vector horizontal(Point(0, 0), Point(-1, 0));
@@ -105,7 +105,7 @@ std::vector<Vector> VectorSort(int i, int j, std::vector<Point>& polygon1,
 	int j_plus = 0;
 	while (i_plus != polygon1.size() || j_plus != polygon2.size())
 	{
-		bool turn;
+		bool turn = 0;
 		if (i_plus == polygon1.size())
 			turn = 1;
 		else
@@ -146,7 +146,8 @@ std::vector<Vector> VectorSort(int i, int j, std::vector<Point>& polygon1,
 	return vec_sort;
 }
 
-std::vector<Point> MinkovskiySum(std::vector<Point>& polygon1, std::vector<Point>& polygon2)
+std::vector<Point> MinkovskiySum(const std::vector<Point>& polygon1, 
+	const std::vector<Point>& polygon2)
 {
 	int most_down_in_first_number = MostDown(polygon1);
 	int most_down_in_second_number = MostDown(polygon2);
@@ -182,7 +183,7 @@ bool IsPointInPolygon(std::vector<Point>& polygon, Point centre)
 
 int main()
 {
-	int n, m;
+	int n = 0, m = 0;
 	Point p;
 	std::vector<Point> polygon1;
 	std::vector<Point> polygon2;
