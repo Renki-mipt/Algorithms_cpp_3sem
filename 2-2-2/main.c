@@ -1,9 +1,9 @@
-#include <iostream>
-#include <vector>
 #include <algorithm>
-#include <stack>
-#include <fstream>
 #include <cmath>
+#include <iostream>
+#include <fstream>
+#include <stack>
+#include <vector>
 
 const long double INF = 1e9 + 3;
 
@@ -15,12 +15,12 @@ struct point
 	point(long double x, long double y) : x(x), y(y) {}
 };
 
-bool operator==(point& A, point& B)
+bool operator==(const point& A, const point& B) 
 {
 	return A.x == B.x && A.y == B.y;
 }
 
-bool operator!=(point& A, point& B)
+bool operator!=(const point& A, const point& B) 
 {
 	return !(A == B);
 }
@@ -49,36 +49,36 @@ struct Vector
 		this->x = B.x - A.x;
 		this->y = B.y - A.y;
 	}
-	long double len()
+	long double inline_()
 	{
 		return sqrt(x * x + y * y);
 	}
 };
 
-long double dot_product(Vector A, Vector B) {
+long double dot_product(const Vector& A,const Vector& B) {
 	return A.x * B.x + A.y * B.y;
 }
 
-long double cross_product(Vector A, Vector B) {
+long double cross_product(const Vector& A, const Vector& B) {
 	return A.x * B.y - A.y * B.x;
 }
 
-bool cmp_up(point A, point B)
+bool cmp_up(const point& A, const point& B)
 {
 	return (A.x > B.x || (A.x == B.x && A.y > B.y));
 }
 
-bool cmp_down(point A, point B)
+bool cmp_down(const point& A, const point& B)
 {
 	return (A.x < B.x || (A.x == B.x && A.y < B.y));
 }
 
-std::vector<point> Graham_convex_hull(std::vector<point> points)
+std::vector<point> Graham_convex_hull(const std::vector<point>& points)
 {
 	if (points.size() == 2)
 	{
-		std::swap(points[0], points[1]);
-		return points;
+		std::vector<point> result = { points[1] , points[0] };
+		return result;
 	}
 	std::vector<point> min_cover;
 	std::stack<point> st;
@@ -86,8 +86,8 @@ std::vector<point> Graham_convex_hull(std::vector<point> points)
 	st.push(points[0]);
 	for (int i = 1; i < points.size(); ++i)
 	{
-		bool flag = 0;
-		while (flag == 0)
+		bool flag = false;
+		while (!flag)
 		{
 			point B = st.top();
 			st.pop();
@@ -97,7 +97,7 @@ std::vector<point> Graham_convex_hull(std::vector<point> points)
 			Vector V2(B, points[i]);
 			if (cross_product(V1, V2) > 0)
 			{
-				flag = 1;
+				flag = true;
 				st.push(A);
 				st.push(B);
 			}
@@ -117,8 +117,8 @@ std::vector<point> Graham_convex_hull(std::vector<point> points)
 
 std::pair<int, int> find_most_right_and_most_left_point(std::vector<point>& points)
 {
-	int left_point_number;
-	int right_point_number;
+	int left_point_number = 0;
+	int right_point_number = 0;
 	long double max_right = INF * (-1);
 	long double max_left = INF;
 	for (int i = 0; i < points.size(); ++i)
@@ -187,23 +187,22 @@ std::vector<point> clear_from_reiterations(std::vector<point>& points)
 	return points_with_out_coincidences;
 }
 
-long double fence_length(std::vector<point>& min_cover)
+long double fence_length(const std::vector<point>& min_cover)
 {
-	min_cover.push_back(min_cover[0]);
 	long double length = 0;
 	for (int i = 0; i < min_cover.size() - 1; ++i)
 	{
 		Vector V(min_cover[i], min_cover[i + 1]);
-		length += V.len();
+		length += V.inline_();
 	}
 	return length;
 }
 
 int main()
 {
-	std::ifstream fin("C:\\Users\\ivras\\Documents\\ФизтехУчеба\\AKOS\\input.txt");
+	std::ifstream fin("input.txt");
 	std::vector<point> points;
-	int n;
+	int n = 0;
 	fin >> n;
 	point A;
 	for (int i = 0; i < n; ++i)
@@ -215,5 +214,6 @@ int main()
 	std::vector<point> min_cover = Andru_convex_hull(points_with_out_coincidences);
 	
 	std::cout.precision(50);
+	min_cover.push_back(min_cover[0]);
 	std::cout << fence_length(min_cover);
 }
