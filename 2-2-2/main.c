@@ -49,7 +49,7 @@ struct Vector
 		this->x = B.x - A.x;
 		this->y = B.y - A.y;
 	}
-	long double inline_()
+	inline long double len()
 	{
 		return sqrt(x * x + y * y);
 	}
@@ -193,7 +193,7 @@ long double fence_length(const std::vector<point>& min_cover)
 	for (int i = 0; i < min_cover.size() - 1; ++i)
 	{
 		Vector V(min_cover[i], min_cover[i + 1]);
-		length += V.inline_();
+		length += V.len();
 	}
 	return length;
 }
